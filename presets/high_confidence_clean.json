@@ -1,0 +1,11 @@
+{
+  "name": "High-confidence clean",
+  "settings": {
+    "preset": "high-confidence",
+    "dynamic-objects-filter-mode": "aggressive",
+    "max-laser-range": 20.0,
+    "image-preset": "high-quality",
+    "res": 0.01,
+    "cloud-format": ["ply"]
+  }
+}

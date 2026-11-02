@@ -1,0 +1,10 @@
+{
+  "name": "Fast preview",
+  "settings": {
+    "res": 0.05,
+    "no-pano": true,
+    "image-preset": "fast",
+    "dynamic-objects-filter-mode": "disabled",
+    "cloud-format": ["ply"]
+  }
+}

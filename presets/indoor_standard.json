@@ -1,0 +1,11 @@
+{
+  "name": "Indoor standard",
+  "settings": {
+    "preset": "standard",
+    "dynamic-objects-filter-mode": "balanced",
+    "image-preset": "high-quality",
+    "no-pano": false,
+    "res": 0.01,
+    "cloud-format": ["ply"]
+  }
+}
