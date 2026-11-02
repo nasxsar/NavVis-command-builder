@@ -49,6 +49,10 @@ button.s{background:transparent;color:var(--acc)}
 .pre button{padding:6px 10px}
 .pn{display:flex;gap:6px;margin-bottom:12px}
 .pn input{flex:1}
+.scn{display:flex;flex-wrap:wrap;gap:8px}
+section{margin-top:26px}
+.sum{margin:0 0 12px;font-size:.9rem;opacity:.85}
+#sugb{text-align:left;word-break:break-all}
 </style>
 </head>
 <body>
@@ -59,22 +63,27 @@ button.s{background:transparent;color:var(--acc)}
 </header>
 
 <main class="form" id="form">
+<h2>Start from a scenario</h2>
+<div class="scn" id="scbtn"></div>
+<p class="h">A scenario fills in the options below. You can still change anything afterwards.</p>
 <h2>Paths</h2>
 <div class="f"><label for="inp">Recorded datasets (one per line)</label>
 <textarea id="inp" placeholder="D:\Projects\Site\datasets_rec\2026-10-20_09.15.02&#10;D:\Projects\Site\datasets_rec\*" spellcheck="false"></textarea>
-<p class="h">Wildcards work. Spaces and special characters are quoted for you.</p></div>
+<p class="h">Wildcards work. Spaces and special characters are quoted for you. Paths pasted with “Copy as path” are cleaned up.</p><p class="h" id="cnote"></p></div>
 <div class="f"><label for="proc">Output folder (<code>--proc-base-dir</code>)</label>
 <input type="text" id="proc" placeholder="D:\Projects\Site\datasets_proc" spellcheck="false"></div>
+<div class="f" id="sug" hidden><button class="s" type="button" id="sugb"></button></div>
+<div class="f"><label for="scn">Scanner</label><select id="scn"><option value="">Not sure / any</option><option value="vlx">NavVis VLX</option><option value="mlx">NavVis MLX</option><option value="m6">NavVis M6</option></select><p class="h">Greys out options that don’t apply to this scanner.</p></div>
 <div id="dyn"></div>
 </main>
 
 <aside class="out">
 <h2>Command</h2>
+<p class="sum" id="sum"></p>
 <pre id="out"></pre>
-<ul id="warn"></ul>
+<ul id="warn" aria-live="polite"></ul>
 <div class="row"><button class="p" id="copy">Copy command</button><button class="s" id="reset">Reset all</button></div>
 <div class="opts">
-<div class="chk"><input type="checkbox" id="wsl" checked><label for="wsl">Convert Windows paths (<code>C:\…</code>) to WSL (<code>/mnt/c/…</code>)</label></div>
 <div class="chk"><input type="checkbox" id="ml" checked><label for="ml">Break the command over several lines</label></div>
 <div class="chk"><input type="checkbox" id="defs"><label for="defs">Write default values explicitly</label></div>
 </div>
@@ -113,12 +122,12 @@ const S=[
 {k:'force',g:'Other',t:'bool',l:'Overwrite existing output (<code>--force</code>)'},
 {k:'no-color',g:'Other',t:'bool',l:'Plain terminal text (<code>--no-color</code>)'}
 ];
-const el={};
-function esc(s){return s}
+S.find(s=>s.k==='preset').sc=['vlx','mlx'];
+S.find(s=>s.k==='cloud-mode').sc=['m6'];
 (function render(){
  let g='',h='';
  for(const s of S){
-  if(s.g!==g){g=s.g;h+='<h2>'+g+'</h2>'}
+  if(s.g!==g){if(g)h+='</section>';g=s.g;h+='<section><h2>'+g+'</h2>'}
   const id='o_'+s.k;let c='';
   if(s.t==='bool')c='<div class="chk"><input type="checkbox" id="'+id+'"><label for="'+id+'">'+s.l+'</label></div>';
   else{
@@ -130,7 +139,7 @@ function esc(s){return s}
   if(s.h)c+='<p class="h">'+s.h+'</p>';
   h+='<div class="f" id="f_'+s.k+'">'+c+'</div>';
  }
- $('dyn').innerHTML=h;
+ $('dyn').innerHTML=h+'</section>';
 })();
 
 function val(s){
@@ -140,9 +149,22 @@ function val(s){
  return e.value.trim();
 }
 function active(s){
+ if(s.sc&&$('scn').value&&!s.sc.includes($('scn').value))return false;
  if(!s.dep)return true;
  const d=S.find(x=>x.k===s.dep[0]);
  return val(d)===!!s.dep[1];
+}
+function clean(p){
+ p=p.trim().replace(/^["']+|["']+$/g,'');
+ const m=p.match(/^\\\\(?:wsl\$|wsl\.localhost)\\[^\\]+\\?(.*)$/i);
+ if(m)p='/'+m[1].replace(/\\/g,'/');
+ return p.replace(/(.)[\\\/]+$/,'$1');
+}
+function suggestProc(){
+ const first=$('inp').value.split('\n').map(x=>x.trim()).filter(Boolean)[0];
+ if(!first)return '';
+ const c=clean(first),m=c.match(/^(.*?)[\\\/]datasets_rec(?:[\\\/]|$)/i);
+ return m?m[1]+(c.includes('\\')?'\\':'/')+'datasets_proc':'';
 }
 function toWsl(p){
  return p.replace(/^([A-Za-z]):[\\\/]/,(m,d)=>'/mnt/'+d.toLowerCase()+'/').replace(/\\/g,'/');
@@ -151,8 +173,8 @@ function q(s){return /^[A-Za-z0-9_@%+=:,.\/*-]+$/.test(s)?s:"'"+s.replace(/'/g,"
 
 let cmd='';
 function build(){
- const conv=$('wsl').checked,inc=$('defs').checked,ml=$('ml').checked;
- const P=p=>conv?toWsl(p):p, warn=[];
+ const inc=$('defs').checked,ml=$('ml').checked,warn=[];let nc=0;
+ const P=p=>{if(/^(["']?[A-Za-z]:[\\\/]|["']?\\\\)/.test(p.trim()))nc++;return toWsl(clean(p))};
  const parts=[];
  const pb=$('proc').value.trim();
  parts.push('--proc-base-dir='+q(pb?P(pb):'/path/to/datasets_proc'));
@@ -184,11 +206,25 @@ function build(){
  }
  const a=num('start-time'),b=num('stop-time');
  if(a!==null&&b!==null&&b<=a)warn.push('Stop time is not after start time.');
+ if(lines.length>1&&(a!==null||b!==null))warn.push('Start and stop time apply to every dataset in the list.');
  const mn=num('min-laser-range'),mx=num('max-laser-range');
  if(mn!==null&&mx!==null&&mn>=mx)warn.push('Minimum range should be smaller than maximum range.');
  const t=val(S.find(s=>s.k==='num-threads-panos'));
  if(t!==''&&!/^[1-9]\d*$/.test(t))warn.push('Parallel panoramas must be a whole number of 1 or more.');
- if(val(S.find(s=>s.k==='anchor-poses'))===''&&val(S.find(s=>s.k==='use-anchors'))===true&&false)0;
+ const g=k=>val(S.find(s=>s.k===k));
+ if(lines.some(l=>/^\/mnt\/[a-z]\//.test(toWsl(clean(l)))))warn.push('Datasets on /mnt/c are read through Windows and can be much slower. Copying them into the Linux filesystem first usually helps.');
+ if(g('force'))warn.push('--force overwrites existing output for these datasets.');
+ $('cnote').textContent=nc?nc+' Windows path'+(nc>1?'s':'')+' converted to WSL format.':'';
+ const sg=suggestProc();
+ $('sug').hidden=!sg||sg===clean($('proc').value);$('sugb').textContent='Use '+sg;$('sug').dataset.v=sg;
+ const sm=[lines.length?lines.length+' dataset'+(lines.length>1?'s':''):'No datasets yet'];
+ if($('scn').value)sm.push($('scn').selectedOptions[0].text);
+ sm.push('resolution '+(g('res')||'0.01')+' m');
+ sm.push(g('no-pano')?'no panoramas':'with panoramas');
+ sm.push(g('cloud-format').join(' + ').toUpperCase()||'no format');
+ if(g('preset')&&active(S.find(s=>s.k==='preset')))sm.push('preset '+g('preset'));
+ if(g('force'))sm.push('overwrites existing output');
+ $('sum').textContent=sm.join(' · ');
  cmd='navvis-postprocessing'+(ml?' \\\n  ':' ')+parts.join(ml?' \\\n  ':' ');
  $('out').textContent=cmd;
  $('warn').innerHTML=warn.map(w=>'<li>'+w.replace(/</g,'&lt;')+'</li>').join('');
@@ -205,12 +241,12 @@ async function copy(){
 
 /* state + saved setups (per-viewer convenience, guarded) */
 function getState(){
- const st={inp:$('inp').value,proc:$('proc').value,wsl:$('wsl').checked,ml:$('ml').checked,defs:$('defs').checked,o:{}};
+ const st={inp:$('inp').value,proc:$('proc').value,scn:$('scn').value,ml:$('ml').checked,defs:$('defs').checked,o:{}};
  S.forEach(s=>st.o[s.k]=val(s));return st;
 }
 function setState(st){
  $('inp').value=st.inp||'';$('proc').value=st.proc||'';
- $('wsl').checked=st.wsl!==false;$('ml').checked=st.ml!==false;$('defs').checked=!!st.defs;
+ $('scn').value=st.scn||'';$('ml').checked=st.ml!==false;$('defs').checked=!!st.defs;
  S.forEach(s=>{
   const e=$('o_'+s.k),v=(st.o||{})[s.k];
   if(s.t==='bool')e.checked=!!v;
@@ -230,6 +266,15 @@ $('psave').onclick=()=>{const n=$('pname').value.trim();if(!n)return;const p=loa
 $('pload').onclick=()=>{const p=load(':presets',{}),n=$('plist').value;if(p[n]){setState(p[n]);build()}};
 $('pdel').onclick=()=>{const p=load(':presets',{}),n=$('plist').value;if(n in p){delete p[n];store(':presets',p);lists()}};
 $('reset').onclick=()=>{setState({});build()};
+const SC={
+ 'Quick preview':{'no-pano':true,res:'0.05','image-preset':'fast'},
+ 'Standard indoor':{},
+ 'Outdoor':{preset:'outdoors',res:'0.02'},
+ 'Final delivery':{'cloud-format':['las','e57']}
+};
+$('scbtn').innerHTML=Object.keys(SC).map(n=>'<button type="button" class="s" data-n="'+n+'">'+n+'</button>').join('');
+$('scbtn').onclick=e=>{const n=e.target.dataset.n;if(n){setState({...getState(),o:SC[n]});build()}};
+$('sugb').onclick=()=>{$('proc').value=$('sug').dataset.v;build()};
 $('copy').onclick=copy;
 document.addEventListener('input',build);
 document.addEventListener('change',build);
