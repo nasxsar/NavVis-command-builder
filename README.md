@@ -24,25 +24,10 @@ Some things you might want to know:
 - It warns you about obvious mistakes, like a stop time earlier than the start time, or a resolution outside 0.005 to 0.2.
 - You can save setups under a name. They're stored in your own browser and nothing leaves your machine.
 
-## Example
-
-Two datasets, anchors from a file, 2 cm resolution, LAS and E57 output:
-
-```bash
-navvis-postprocessing \
-  --proc-base-dir=/mnt/d/Projects/Site/datasets_proc \
-  /mnt/d/Projects/Site/datasets_rec/* \
-  --use-anchors \
-  --anchor-poses=/mnt/d/Projects/Site/anchors.txt \
-  --res=0.02 \
-  --cloud-format las e57
-```
 
 ## Using it
 
-Open the link above, or download `index.html` and open it in a browser. There's nothing to install. The only thing it loads from outside is the IBM Plex font from Google Fonts, and it falls back to your system font if that fails.
-
-Put your dataset folders in, one per line, set the options, and press Copy command.
+it's simple Open the link above
 
 ## Things to keep in mind
 
@@ -54,12 +39,8 @@ It only produces text. It doesn't run NavVis and it never touches your files.
 
 ## Rights
 
-The code and design of this page are copyright © 2026 @nasxsar. All rights reserved. You can't copy, change or redistribute it unless I add a license to this repository.
-
 NavVis, VLX, MLX, M6, SiteMaker and `navvis-postprocessing` are names of products and software that belong to NavVis GmbH, and all rights in them stay with NavVis GmbH. I only use the option names so the commands come out right. There's no NavVis code or documentation text in here. The official documentation is at https://knowledge.navvis.com/.
 
-The IBM Plex fonts belong to IBM Corp. and are under the SIL Open Font License 1.1. They're loaded from Google Fonts and aren't part of this repo.
-
-The page is provided as it is, with no warranty. Check every command before you run it on real data.
+original custom arguments source: https://knowledge.navvis.com/docs/custom-arguments
 
 If something's wrong or missing, open an issue.
