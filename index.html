@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NavVis post-processing command builder</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef1f2;--ink:#14232b;--mute:#5b6b73;--line:#cdd6da;--acc:#0e5a66;--field:#fff;--term:#10232a;--termink:#e6f1f3;--stake:#f2b705;--warn:#9a5b00;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1a1f;--ink:#e3edf0;--mute:#8fa3ab;--line:#26373f;--acc:#5cc3d1;--field:#16262d;--term:#081317;--termink:#e6f1f3;--warn:#f0b64a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1a1f;--ink:#e3edf0;--mute:#8fa3ab;--line:#26373f;--acc:#5cc3d1;--field:#16262d;--term:#081317;--termink:#e6f1f3;--warn:#f0b64a;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 "IBM Plex Sans",system-ui,sans-serif}
+.wrap{max-width:1120px;margin:0 auto;padding:20px 16px 48px;display:grid;gap:28px;grid-template-columns:1fr}
+@media(min-width:900px){.wrap{grid-template-columns:minmax(0,1fr) 420px;align-items:start}.out{position:sticky;top:16px;grid-column:2;grid-row:2}.form{grid-column:1;grid-row:2}header{grid-column:1/-1}}
+h1{font-size:1.6rem;margin:0 0 4px;letter-spacing:-.01em}
+header p{margin:0;color:var(--mute);max-width:62ch}
+h2{font-size:1rem;margin:26px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--acc)}
+h2:first-child{margin-top:0}
+label{display:block;font-weight:600;font-size:.92rem;margin-bottom:3px}
+.h{color:var(--mute);font-size:.84rem;margin:3px 0 0}
+.f{margin-bottom:14px}
+.f[data-off="1"]{opacity:.45}
+input[type=text],select,textarea{width:100%;background:var(--field);color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:8px 10px;font:inherit;font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.88rem}
+textarea{min-height:84px;resize:vertical}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,.chk input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.chk{display:flex;gap:10px;align-items:flex-start}
+.chk input{margin-top:5px;width:16px;height:16px;accent-color:var(--acc);flex:none}
+.chk label{margin:0;font-weight:400}
+.fmts{display:flex;flex-wrap:wrap;gap:6px 16px}
+.fmts .chk{align-items:center}.fmts .chk input{margin:0}
+.out{background:var(--term);color:var(--termink);border-left:6px solid var(--stake);border-radius:4px;padding:16px}
+.out h2{border-color:#2c4650;color:var(--termink);margin-top:0}
+pre{margin:0;white-space:pre-wrap;word-break:break-all;font:500 .85rem/1.55 "IBM Plex Mono",ui-monospace,monospace;min-height:5em}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+button{font:inherit;font-weight:600;font-size:.88rem;padding:8px 14px;border-radius:4px;border:1px solid var(--acc);background:var(--acc);color:#fff;cursor:pointer}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) button.p{color:#06242a}}
+button.s{background:transparent;color:var(--acc)}
+.out button.s{color:var(--termink);border-color:#4c6670}
+.opts{margin-top:14px;display:grid;gap:6px;font-size:.88rem}
+.opts .chk label{font-size:.86rem}
+#warn{margin:12px 0 0;padding:0;list-style:none;color:#f5c35c;font-size:.86rem}
+#warn li{margin-top:4px}
+.pre{display:grid;grid-template-columns:1fr auto auto;gap:6px;margin-bottom:12px}
+.pre select{min-width:0}
+.pre button{padding:6px 10px}
+.pn{display:flex;gap:6px;margin-bottom:12px}
+.pn input{flex:1}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>NavVis post-processing command builder</h1>
+<p>Set the options you need and copy the finished <code>navvis-postprocessing</code> command. Only values that differ from NavVis’s defaults are written, unless you ask for them all.</p>
+</header>
+
+<main class="form" id="form">
+<h2>Paths</h2>
+<div class="f"><label for="inp">Recorded datasets (one per line)</label>
+<textarea id="inp" placeholder="D:\Projects\Site\datasets_rec\2026-10-20_09.15.02&#10;D:\Projects\Site\datasets_rec\*" spellcheck="false"></textarea>
+<p class="h">Wildcards work. Spaces and special characters are quoted for you.</p></div>
+<div class="f"><label for="proc">Output folder (<code>--proc-base-dir</code>)</label>
+<input type="text" id="proc" placeholder="D:\Projects\Site\datasets_proc" spellcheck="false"></div>
+<div id="dyn"></div>
+</main>
+
+<aside class="out">
+<h2>Command</h2>
+<pre id="out"></pre>
+<ul id="warn"></ul>
+<div class="row"><button class="p" id="copy">Copy command</button><button class="s" id="reset">Reset all</button></div>
+<div class="opts">
+<div class="chk"><input type="checkbox" id="wsl" checked><label for="wsl">Convert Windows paths (<code>C:\…</code>) to WSL (<code>/mnt/c/…</code>)</label></div>
+<div class="chk"><input type="checkbox" id="ml" checked><label for="ml">Break the command over several lines</label></div>
+<div class="chk"><input type="checkbox" id="defs"><label for="defs">Write default values explicitly</label></div>
+</div>
+<h2 style="margin-top:22px">Saved setups</h2>
+<div class="pre"><select id="plist" aria-label="Saved setups"></select><button class="s" id="pload">Load</button><button class="s" id="pdel">Delete</button></div>
+<div class="pn"><input type="text" id="pname" placeholder="Name for this setup" aria-label="Setup name"><button class="s" id="psave">Save</button></div>
+</aside>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const FM=['e57','pts','ptx','pcd','xyz','las','ply'];
+const S=[
+{k:'start-time',g:'Time range',t:'text',l:'Start time',h:'Seconds from the start of the dataset, or an absolute Unix timestamp.'},
+{k:'stop-time',g:'Time range',t:'text',l:'Stop time',h:'Same format as the start time.'},
+{k:'use-anchors',g:'SLAM',t:'bool',l:'Use anchor poses',h:'Uses the anchors stored in the dataset, or the file below.'},
+{k:'anchor-poses',g:'SLAM',t:'path',l:'Anchor poses file',h:'A .txt or .csv file, applied to all datasets.',dep:['use-anchors',1]},
+{k:'no-auto-transform',g:'SLAM',t:'bool',l:'Do not transform into the control point system',h:'Only has an effect with anchor poses.',dep:['use-anchors',1]},
+{k:'no-loop-closures',g:'SLAM',t:'bool',l:'Skip loop closures in the final optimization'},
+{k:'res',g:'Point cloud',t:'text',l:'Resolution (m)',def:'0.01',list:['0.005','0.01','0.02','0.05','0.1','0.2'],h:'Between 0.005 and 0.2.'},
+{k:'preset',g:'Point cloud',t:'sel',l:'Preset',def:'standard',o:['standard','outdoors','high-confidence'],h:'VLX and MLX only. Outdoors reaches further; high-confidence keeps only well-scanned areas.'},
+{k:'dynamic-objects-filter-mode',g:'Point cloud',t:'sel',l:'Dynamic object filter',def:'balanced',o:['disabled','balanced','aggressive']},
+{k:'max-laser-range',g:'Point cloud',t:'text',l:'Maximum laser range (m)',def:'30.0'},
+{k:'min-laser-range',g:'Point cloud',t:'text',l:'Minimum laser range (m)'},
+{k:'cloud-mode',g:'Point cloud',t:'sel',l:'Cloud filtering mode',def:'sharp-edges',o:['sharp-edges','balanced','smooth-surfaces'],h:'M6 datasets only.'},
+{k:'store-raw-cloud',g:'Point cloud',t:'bool',l:'Store the raw point cloud next to the filtered one'},
+{k:'cloud-format',g:'Point cloud',t:'multi',l:'Output formats',def:['ply'],h:'Written last in the command so it does not swallow the dataset paths.'},
+{k:'no-color-cloud',g:'Coloring',t:'bool',l:'Do not color the cloud from images',h:'The cloud keeps lidar intensity instead of RGB.'},
+{k:'coloring-output-type',g:'Coloring',t:'sel',l:'Color output type',def:'rgbi',o:['rgbi','rgb'],dep:['no-color-cloud',0]},
+{k:'coloring-max-view-distance',g:'Coloring',t:'text',l:'Max point-to-camera distance (m)',def:'35.0',dep:['no-color-cloud',0]},
+{k:'no-pano',g:'Panoramas',t:'bool',l:'Do not render panoramic images'},
+{k:'mask-pano',g:'Panoramas',t:'path',l:'Operator mask file',dep:['no-pano',0]},
+{k:'no-pano-floor-filling',g:'Panoramas',t:'bool',l:'Disable panorama floor filling',dep:['no-pano',0]},
+{k:'num-threads-panos',g:'Panoramas',t:'text',l:'Panoramas rendered in parallel',h:'Whole number, 1 or more. Limited by CPU threads and free RAM.',dep:['no-pano',0]},
+{k:'image-preset',g:'Images',t:'sel',l:'Image preset',def:'high-quality',o:['high-quality','fast','plain']},
+{k:'force',g:'Other',t:'bool',l:'Overwrite existing output (<code>--force</code>)'},
+{k:'no-color',g:'Other',t:'bool',l:'Plain terminal text (<code>--no-color</code>)'}
+];
+const el={};
+function esc(s){return s}
+(function render(){
+ let g='',h='';
+ for(const s of S){
+  if(s.g!==g){g=s.g;h+='<h2>'+g+'</h2>'}
+  const id='o_'+s.k;let c='';
+  if(s.t==='bool')c='<div class="chk"><input type="checkbox" id="'+id+'"><label for="'+id+'">'+s.l+'</label></div>';
+  else{
+   c='<label for="'+id+'">'+s.l+'</label>';
+   if(s.t==='sel')c+='<select id="'+id+'"><option value="">Default ('+s.def+')</option>'+s.o.map(o=>'<option>'+o+'</option>').join('')+'</select>';
+   else if(s.t==='multi')c+='<div class="fmts" id="'+id+'">'+FM.map(f=>'<div class="chk"><input type="checkbox" data-f="'+f+'" id="'+id+'_'+f+'"'+(f==='ply'?' checked':'')+'><label for="'+id+'_'+f+'">'+f+'</label></div>').join('')+'</div>';
+   else c+='<input type="text" id="'+id+'" spellcheck="false"'+(s.list?' list="l_'+s.k+'"':'')+(s.def?' placeholder="'+s.def+'"':'')+'>'+(s.list?'<datalist id="l_'+s.k+'">'+s.list.map(v=>'<option value="'+v+'">').join('')+'</datalist>':'');
+  }
+  if(s.h)c+='<p class="h">'+s.h+'</p>';
+  h+='<div class="f" id="f_'+s.k+'">'+c+'</div>';
+ }
+ $('dyn').innerHTML=h;
+})();
+
+function val(s){
+ const e=$('o_'+s.k);
+ if(s.t==='bool')return e.checked;
+ if(s.t==='multi')return [...e.querySelectorAll('input:checked')].map(i=>i.dataset.f);
+ return e.value.trim();
+}
+function active(s){
+ if(!s.dep)return true;
+ const d=S.find(x=>x.k===s.dep[0]);
+ return val(d)===!!s.dep[1];
+}
+function toWsl(p){
+ return p.replace(/^([A-Za-z]):[\\\/]/,(m,d)=>'/mnt/'+d.toLowerCase()+'/').replace(/\\/g,'/');
+}
+function q(s){return /^[A-Za-z0-9_@%+=:,.\/*-]+$/.test(s)?s:"'"+s.replace(/'/g,"'\\''")+"'"}
+
+let cmd='';
+function build(){
+ const conv=$('wsl').checked,inc=$('defs').checked,ml=$('ml').checked;
+ const P=p=>conv?toWsl(p):p, warn=[];
+ const parts=[];
+ const pb=$('proc').value.trim();
+ parts.push('--proc-base-dir='+q(pb?P(pb):'/path/to/datasets_proc'));
+ const lines=$('inp').value.split('\n').map(x=>x.trim()).filter(Boolean);
+ if(!lines.length){parts.push('<input>');warn.push('Add at least one dataset path.')}
+ else lines.forEach(l=>parts.push(q(P(l))));
+ let fmt=null;
+ for(const s of S){
+  const f=$('f_'+s.k),on=active(s);
+  f.dataset.off=on?'':'1';
+  [...f.querySelectorAll('input,select')].forEach(i=>i.disabled=!on);
+  if(!on)continue;
+  const v=val(s),flag='--'+s.k;
+  if(s.t==='bool'){if(v)parts.push(flag)}
+  else if(s.t==='multi'){
+   const diff=v.join()!==s.def.join();
+   if(!v.length)warn.push('Pick at least one output format.');
+   else if(diff||inc)fmt=flag+' '+v.join(' ');
+  }
+  else if(v)parts.push(flag+'='+q(s.t==='path'?P(v):v));
+  else if(inc&&s.def)parts.push(flag+'='+s.def);
+ }
+ if(fmt)parts.push(fmt);
+ const num=k=>{const v=val(S.find(s=>s.k===k));return v===''?null:Number(v)};
+ const r=num('res');
+ if(r!==null&&!(r>=0.005&&r<=0.2))warn.push('Resolution should be between 0.005 and 0.2 m.');
+ for(const k of['start-time','stop-time','max-laser-range','min-laser-range','coloring-max-view-distance']){
+  const n=num(k);if(n!==null&&(isNaN(n)||n<0))warn.push(k+' must be a positive number.');
+ }
+ const a=num('start-time'),b=num('stop-time');
+ if(a!==null&&b!==null&&b<=a)warn.push('Stop time is not after start time.');
+ const mn=num('min-laser-range'),mx=num('max-laser-range');
+ if(mn!==null&&mx!==null&&mn>=mx)warn.push('Minimum range should be smaller than maximum range.');
+ const t=val(S.find(s=>s.k==='num-threads-panos'));
+ if(t!==''&&!/^[1-9]\d*$/.test(t))warn.push('Parallel panoramas must be a whole number of 1 or more.');
+ if(val(S.find(s=>s.k==='anchor-poses'))===''&&val(S.find(s=>s.k==='use-anchors'))===true&&false)0;
+ cmd='navvis-postprocessing'+(ml?' \\\n  ':' ')+parts.join(ml?' \\\n  ':' ');
+ $('out').textContent=cmd;
+ $('warn').innerHTML=warn.map(w=>'<li>'+w.replace(/</g,'&lt;')+'</li>').join('');
+ save();
+}
+
+async function copy(){
+ let ok=false;
+ try{await navigator.clipboard.writeText(cmd);ok=true}catch(e){}
+ if(!ok){try{const t=document.createElement('textarea');t.value=cmd;document.body.appendChild(t);t.select();ok=document.execCommand('copy');t.remove()}catch(e){}}
+ const b=$('copy');b.textContent=ok?'Copied':'Select the command and copy it';
+ setTimeout(()=>b.textContent='Copy command',1800);
+}
+
+/* state + saved setups (per-viewer convenience, guarded) */
+function getState(){
+ const st={inp:$('inp').value,proc:$('proc').value,wsl:$('wsl').checked,ml:$('ml').checked,defs:$('defs').checked,o:{}};
+ S.forEach(s=>st.o[s.k]=val(s));return st;
+}
+function setState(st){
+ $('inp').value=st.inp||'';$('proc').value=st.proc||'';
+ $('wsl').checked=st.wsl!==false;$('ml').checked=st.ml!==false;$('defs').checked=!!st.defs;
+ S.forEach(s=>{
+  const e=$('o_'+s.k),v=(st.o||{})[s.k];
+  if(s.t==='bool')e.checked=!!v;
+  else if(s.t==='multi')e.querySelectorAll('input').forEach(i=>i.checked=Array.isArray(v)?v.includes(i.dataset.f):s.def.includes(i.dataset.f));
+  else e.value=v||'';
+ });
+}
+const K='navvis-builder';
+function store(k,v){try{localStorage.setItem(K+k,JSON.stringify(v))}catch(e){}}
+function load(k,d){try{const r=localStorage.getItem(K+k);return r?JSON.parse(r):d}catch(e){return d}}
+function save(){store(':draft',getState())}
+function lists(){
+ const p=load(':presets',{}),sel=$('plist');
+ sel.innerHTML=Object.keys(p).length?Object.keys(p).map(n=>'<option>'+n.replace(/</g,'&lt;')+'</option>').join(''):'<option value="">No saved setups</option>';
+}
+$('psave').onclick=()=>{const n=$('pname').value.trim();if(!n)return;const p=load(':presets',{});p[n]=getState();store(':presets',p);lists();$('plist').value=n;$('pname').value=''};
+$('pload').onclick=()=>{const p=load(':presets',{}),n=$('plist').value;if(p[n]){setState(p[n]);build()}};
+$('pdel').onclick=()=>{const p=load(':presets',{}),n=$('plist').value;if(n in p){delete p[n];store(':presets',p);lists()}};
+$('reset').onclick=()=>{setState({});build()};
+$('copy').onclick=copy;
+document.addEventListener('input',build);
+document.addEventListener('change',build);
+setState(load(':draft',{}));lists();build();
+</script>
+</body>
+</html>
