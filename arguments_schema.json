@@ -1,0 +1,360 @@
+[
+  {
+    "name": "input",
+    "flag": "input",
+    "type": "dataset_list",
+    "default": [],
+    "choices": [],
+    "help": "List of recorded datasets, i.e. one or multiple dataset directories that should be processed. May contain wildcards.",
+    "group": "Standard",
+    "dependencies": []
+  },
+  {
+    "name": "proc-base-dir",
+    "flag": "--proc-base-dir",
+    "type": "path_dir",
+    "default": "",
+    "choices": [],
+    "help": "Base directory where sub-folders will be created for all output directories.",
+    "group": "Standard",
+    "dependencies": []
+  },
+  {
+    "name": "start-time",
+    "flag": "--start-time",
+    "type": "float",
+    "default": "",
+    "choices": [],
+    "help": "Start time defining from which point (in time) a dataset is meant to be processed.",
+    "group": "Standard",
+    "dependencies": [],
+    "min": 0.0,
+    "max": 9999999999.0
+  },
+  {
+    "name": "stop-time",
+    "flag": "--stop-time",
+    "type": "float",
+    "default": "",
+    "choices": [],
+    "help": "Stop time defining up to which point (in time) a dataset is meant to be processed.",
+    "group": "Standard",
+    "dependencies": [],
+    "min": 0.0,
+    "max": 9999999999.0
+  },
+  {
+    "name": "no-auto-transform",
+    "flag": "--no-auto-transform",
+    "type": "boolean",
+    "default": false,
+    "choices": [],
+    "help": "Disables automatic transformation into the control point coordinate system. Requires --use-anchors.",
+    "group": "Other",
+    "dependencies": [
+      "use-anchors"
+    ]
+  },
+  {
+    "name": "no-color",
+    "flag": "--no-color",
+    "aliases": [
+      "--no-terminal-text-color"
+    ],
+    "type": "boolean",
+    "default": false,
+    "choices": [],
+    "help": "Do not colorize text in terminal.",
+    "group": "Other",
+    "dependencies": []
+  },
+  {
+    "name": "use-anchors",
+    "flag": "--use-anchors",
+    "type": "boolean",
+    "default": false,
+    "choices": [],
+    "help": "Use anchor poses in rec dataset or from --anchor-poses.",
+    "group": "SLAM",
+    "dependencies": []
+  },
+  {
+    "name": "anchor-poses",
+    "flag": "--anchor-poses",
+    "type": "path_file",
+    "default": "",
+    "choices": [],
+    "help": "Anchor poses file in txt/csv format. Requires --use-anchors.",
+    "group": "SLAM",
+    "dependencies": [
+      "use-anchors"
+    ]
+  },
+  {
+    "name": "no-loop-closures",
+    "flag": "--no-loop-closures",
+    "type": "boolean",
+    "default": false,
+    "choices": [],
+    "help": "Do not use loop closures in final optimization.",
+    "group": "SLAM",
+    "dependencies": []
+  },
+  {
+    "name": "res",
+    "flag": "--res",
+    "type": "float",
+    "default": 0.01,
+    "choices": [],
+    "help": "Spatial resolution in meters of generated point cloud.",
+    "group": "Point cloud generation",
+    "dependencies": [],
+    "min": 0.005,
+    "max": 0.2,
+    "step": 0.005
+  },
+  {
+    "name": "preset",
+    "flag": "--preset",
+    "type": "choice",
+    "default": "standard",
+    "choices": [
+      "standard",
+      "outdoors",
+      "high-confidence"
+    ],
+    "help": "Pointcloud settings profile.",
+    "group": "Point cloud generation",
+    "dependencies": []
+  },
+  {
+    "name": "dynamic-objects-filter-mode",
+    "flag": "--dynamic-objects-filter-mode",
+    "type": "choice",
+    "default": "balanced",
+    "choices": [
+      "disabled",
+      "balanced",
+      "aggressive"
+    ],
+    "help": "Strength of dynamic object filtering.",
+    "group": "Point cloud generation",
+    "dependencies": []
+  },
+  {
+    "name": "max-laser-range",
+    "flag": "--max-laser-range",
+    "type": "float",
+    "default": 30.0,
+    "choices": [],
+    "help": "Maximum range in meters for point cloud generation.",
+    "group": "Point cloud generation",
+    "dependencies": [],
+    "min": 0.0,
+    "max": 1000.0
+  },
+  {
+    "name": "min-laser-range",
+    "flag": "--min-laser-range",
+    "type": "float",
+    "default": "",
+    "choices": [],
+    "help": "Minimum range in meters for point cloud generation.",
+    "group": "Point cloud generation",
+    "dependencies": [],
+    "min": 0.0,
+    "max": 1000.0
+  },
+  {
+    "name": "cloud-format",
+    "flag": "--cloud-format",
+    "type": "multi_choice",
+    "default": [
+      "ply"
+    ],
+    "choices": [
+      "e57",
+      "pts",
+      "ptx",
+      "pcd",
+      "xyz",
+      "las",
+      "ply"
+    ],
+    "help": "Desired point cloud output format(s).",
+    "group": "Point cloud generation",
+    "dependencies": []
+  },
+  {
+    "name": "cloud-mode",
+    "flag": "--cloud-mode",
+    "type": "choice",
+    "default": "sharp-edges",
+    "choices": [
+      "sharp-edges",
+      "balanced",
+      "smooth-surfaces"
+    ],
+    "help": "Point cloud filtering mode (M6 only).",
+    "group": "Point cloud generation",
+    "dependencies": []
+  },
+  {
+    "name": "store-raw-cloud",
+    "flag": "--store-raw-cloud",
+    "type": "boolean",
+    "default": false,
+    "choices": [],
+    "help": "Store raw point cloud along with filtered one.",
+    "group": "Point cloud generation",
+    "dependencies": []
+  },
+  {
+    "name": "no-color-cloud",
+    "flag": "--no-color-cloud",
+    "type": "boolean",
+    "default": false,
+    "choices": [],
+    "help": "Do not colorize cloud with RGB colors.",
+    "group": "Point cloud coloring",
+    "dependencies": []
+  },
+  {
+    "name": "coloring-output-type",
+    "flag": "--coloring-output-type",
+    "type": "choice",
+    "default": "rgbi",
+    "choices": [
+      "rgbi",
+      "rgb"
+    ],
+    "help": "Output type of colored point cloud.",
+    "group": "Point cloud coloring",
+    "dependencies": []
+  },
+  {
+    "name": "coloring-max-view-distance",
+    "flag": "--coloring-max-view-distance",
+    "type": "float",
+    "default": 35.0,
+    "choices": [],
+    "help": "Maximum point-to-camera distance for colorization.",
+    "group": "Point cloud coloring",
+    "dependencies": [],
+    "min": 0.0,
+    "max": 1000.0
+  },
+  {
+    "name": "no-pano",
+    "flag": "--no-pano",
+    "type": "boolean",
+    "default": false,
+    "choices": [],
+    "help": "Do not render panoramic images.",
+    "group": "Panorama rendering",
+    "dependencies": []
+  },
+  {
+    "name": "mask-pano",
+    "flag": "--mask-pano",
+    "type": "path_file",
+    "default": "",
+    "choices": [],
+    "help": "Optional operator mask for panoramas.",
+    "group": "Panorama rendering",
+    "dependencies": []
+  },
+  {
+    "name": "no-pano-floor-filling",
+    "flag": "--no-pano-floor-filling",
+    "type": "boolean",
+    "default": false,
+    "choices": [],
+    "help": "Disable panoramic image floor filling.",
+    "group": "Panorama rendering",
+    "dependencies": []
+  },
+  {
+    "name": "num-threads-panos",
+    "flag": "--num-threads-panos",
+    "type": "int",
+    "default": "",
+    "choices": [],
+    "help": "Number of panoramas rendered in parallel.",
+    "group": "Panorama rendering",
+    "dependencies": [],
+    "min": 1,
+    "max": 1024
+  },
+  {
+    "name": "image-preset",
+    "flag": "--image-preset",
+    "type": "choice",
+    "default": "high-quality",
+    "choices": [
+      "high-quality",
+      "fast",
+      "plain"
+    ],
+    "help": "Preset for post-processing of camera images.",
+    "group": "Image enhancement",
+    "dependencies": []
+  },
+  {
+    "name": "force",
+    "flag": "--force",
+    "aliases": [
+      "-f"
+    ],
+    "type": "boolean",
+    "default": false,
+    "choices": [],
+    "help": "Overwrite existing files/directories.",
+    "group": "Force",
+    "dependencies": []
+  },
+  {
+    "name": "force-trajectories",
+    "flag": "--force-trajectories",
+    "type": "boolean",
+    "default": false,
+    "choices": [],
+    "help": "Deprecated. Same behavior as --force.",
+    "group": "Force",
+    "dependencies": [],
+    "deprecated": true
+  },
+  {
+    "name": "force-cloud",
+    "flag": "--force-cloud",
+    "type": "boolean",
+    "default": false,
+    "choices": [],
+    "help": "Deprecated. Same behavior as --force.",
+    "group": "Force",
+    "dependencies": [],
+    "deprecated": true
+  },
+  {
+    "name": "force-color-cloud",
+    "flag": "--force-color-cloud",
+    "type": "boolean",
+    "default": false,
+    "choices": [],
+    "help": "Deprecated. Same behavior as --force.",
+    "group": "Force",
+    "dependencies": [],
+    "deprecated": true
+  },
+  {
+    "name": "force-pano",
+    "flag": "--force-pano",
+    "type": "boolean",
+    "default": false,
+    "choices": [],
+    "help": "Deprecated. Same behavior as --force.",
+    "group": "Force",
+    "dependencies": [],
+    "deprecated": true
+  }
+]

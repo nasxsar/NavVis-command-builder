@@ -1,0 +1,11 @@
+{
+  "name": "Outdoor large area",
+  "settings": {
+    "preset": "outdoors",
+    "dynamic-objects-filter-mode": "disabled",
+    "max-laser-range": 45.0,
+    "image-preset": "fast",
+    "res": 0.02,
+    "cloud-format": ["ply", "e57"]
+  }
+}
