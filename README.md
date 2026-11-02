@@ -1,17 +1,65 @@
-# NavVis post-processing command builder
+# NavVis Command Builder
 
-A single-file web tool that builds `navvis-postprocessing` commands from a form.
+A small page that writes `navvis-postprocessing` commands for you. You fill in a form, it gives you the command, you paste it into your terminal.
 
-- Covers every option in the NavVis post-processing help output
-- Writes only non-default values (or all of them, if you choose)
-- Converts Windows paths (`C:\...`) to WSL paths (`/mnt/c/...`)
-- Quotes paths with spaces and keeps `--cloud-format` last so it can't swallow dataset paths
-- Saves named setups in your browser
+Try it here: https://nasxsar.github.io/NavVis-command-builder/
 
-## Use
+This is not an official NavVis tool and NavVis has nothing to do with it. More on that at the bottom.
 
-Open `index.html` in a browser. No build step, no dependencies (fonts load from Google Fonts and fall back to system fonts offline).
+## Why it exists
 
-To host it: enable GitHub Pages on the repository (Settings → Pages → Deploy from branch → `main` / root).
+The post-processing command has a lot of flags, and the paths are long. If you work on Windows and run NavVis through WSL, you also end up converting `D:\Projects\...` to `/mnt/d/Projects/...` over and over. This does that part for you and keeps the flags in one place.
 
-Check the options against your installed NavVis version with `navvis-postprocessing --help`.
+## What it does
+
+It covers every option in the help output: time range, SLAM and anchors, point cloud settings, coloring, panoramas, image preset, and force.
+
+Some things you might want to know:
+
+- It only writes options you changed from the NavVis defaults. If you want every value spelled out, there's a checkbox for that.
+- Options that don't apply get greyed out. Turn off panoramas and the panorama settings go grey, for example.
+- Windows paths get converted to WSL paths. You can switch that off.
+- Paths with spaces get quoted. A `*` wildcard is left alone so your shell expands it.
+- `--cloud-format` always goes at the end. It takes several values, so if it sat in the middle it would eat your dataset paths.
+- It warns you about obvious mistakes, like a stop time earlier than the start time, or a resolution outside 0.005 to 0.2.
+- You can save setups under a name. They're stored in your own browser and nothing leaves your machine.
+
+## Example
+
+Two datasets, anchors from a file, 2 cm resolution, LAS and E57 output:
+
+```bash
+navvis-postprocessing \
+  --proc-base-dir=/mnt/d/Projects/Site/datasets_proc \
+  /mnt/d/Projects/Site/datasets_rec/* \
+  --use-anchors \
+  --anchor-poses=/mnt/d/Projects/Site/anchors.txt \
+  --res=0.02 \
+  --cloud-format las e57
+```
+
+## Using it
+
+Open the link above, or download `index.html` and open it in a browser. There's nothing to install. The only thing it loads from outside is the IBM Plex font from Google Fonts, and it falls back to your system font if that fails.
+
+Put your dataset folders in, one per line, set the options, and press Copy command.
+
+## Things to keep in mind
+
+I built the option list from one version of the NavVis help output (2026). Other versions might add or rename flags, so compare the command with `navvis-postprocessing --help` before you run anything important.
+
+A few options only work on certain devices. `--preset` is for VLX and MLX, and `--cloud-mode` is for M6. The page shows a note about this but it can't tell which device recorded your data.
+
+It only produces text. It doesn't run NavVis and it never touches your files.
+
+## Rights
+
+The code and design of this page are copyright © 2026 @nasxsar. All rights reserved. You can't copy, change or redistribute it unless I add a license to this repository.
+
+NavVis, VLX, MLX, M6, SiteMaker and `navvis-postprocessing` are names of products and software that belong to NavVis GmbH, and all rights in them stay with NavVis GmbH. I only use the option names so the commands come out right. There's no NavVis code or documentation text in here. The official documentation is at https://knowledge.navvis.com/.
+
+The IBM Plex fonts belong to IBM Corp. and are under the SIL Open Font License 1.1. They're loaded from Google Fonts and aren't part of this repo.
+
+The page is provided as it is, with no warranty. Check every command before you run it on real data.
+
+If something's wrong or missing, open an issue.
